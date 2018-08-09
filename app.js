@@ -14,7 +14,6 @@ app.use(express.static("public"));
 app.get("/", function(req, res) {
     res.render("index");
     // logInToSpotify();
-    readFromFile('app_data.txt');
 });
 /*
 ============================================================================================
@@ -88,6 +87,8 @@ app.get("/callback", function(req, res) {
                 var access_token = body.access_token,
                     refresh_token = body.refresh_token;
 
+                saveToFile('access_token', access_token);
+
                 var options = {
                     url: 'https://api.spotify.com/v1/me',
                     headers: {
@@ -123,6 +124,15 @@ function readFromFile(name){
     var file = fs.readFileSync(name, 'utf8');
     console.log(file);   
 }
+
+function saveToFile(key, value){
+    fs.writeFileSync('app_data.txt', key+","+value);
+}
+
+function getFromFile(){
+
+}
+
 
 /*
 ============================================================================================
