@@ -16,7 +16,7 @@
 	        </select>
 	        <br>
 	       	<br>
-	        <select id="trackSelect" size="30" style = "visibility: hidden;">
+	        <select id="trackSelect" size="30" style = "visibility: hidden; width: 500px;">
 				
 			</select>
 
@@ -29,6 +29,14 @@
         <script src="http://code.jquery.com/jquery-3.3.1.min.js"  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
         <script type="text/javascript">
         	$("#playlistSelect").change(function(){
+        		loadTracksIntoSelect();
+        	});
+
+        	$(document).ready(function(){
+			    loadTracksIntoSelect();
+			});
+
+        	function loadTracksIntoSelect(){
         		var playlistID = $("#playlistSelect").val();
         		console.log(playlistID);
         		$.ajax({
@@ -39,17 +47,17 @@
         				var artists = data.trackArtists; 
         				$("#trackSelect").empty();       			
         				var ids = data.trackIds; 
-        				$("#trackSelect").attr('size', tracks.length);
+        				// $("#trackSelect").attr('size', 30);
         				$("#trackSelect").css("visibility", "visible");
         				for (i = 0; i < tracks.length; i++) {
         				    $('#trackSelect').append($('<option>', {
 							    value: ids[i],
-							    text: tracks[i]+" - " + artists[i]
+							    text: (i+1)+". "+tracks[i]+" - " + artists[i]
 							}));
         				};       			
         			}
         		});
-        	})
+        	}
         </script>
     </body>
 </html>
