@@ -5,7 +5,8 @@ var express = require("express"),
     cors = require('cors'),
     cookieParser = require('cookie-parser'),
     queryString = require('querystring'),
-    fs = require('fs');
+    fs = require('fs')
+    FILE_NAME = 'app_data.txt';
 
 
 app.set("view engine", "ejs");
@@ -15,6 +16,27 @@ app.get("/", function(req, res) {
     res.render("index");
     // logInToSpotify();
 });
+
+app.get("/print", function(req, res){
+    console.log(readFromFile());
+});
+
+app.get("/playlists", function(req,res){
+    res.render("playlists");
+    var accessToken = getFromFile('access_token');
+    var requestOptions = {
+        url: 'https://api.spotify.com/v1/me/playlists',
+        headers: {
+            'Authorization': 'Bearer '+accessToken 
+        }
+    }
+    request(requestOptions, function (error, response, body) {
+      console.log('error:', error); // Print the error if one occurred
+      console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+      console.log('body:', body); // Print the HTML for the Google homepage.
+    });
+});
+
 /*
 ============================================================================================
 USER LOGIN
@@ -52,7 +74,8 @@ app.get("/login_spotify", function(req, res) {
             client_id: client_id,
             scope: scope,
             redirect_uri: redirect_uri,
-            state: state
+            state: state,
+            show_dialog: true
         }));
 });
 
@@ -120,25 +143,42 @@ app.get("/callback", function(req, res) {
     }
 });
 
-function readFromFile(name){
-    var file = fs.readFileSync(name, 'utf8');
-    console.log(file);   
-}
-
-function saveToFile(key, value){
-    fs.writeFileSync('app_data.txt', key+","+value);
-}
-
-function getFromFile(){
-
-}
-
 
 /*
 ============================================================================================
 END OF USER LOGIN
 ============================================================================================
 */
+
+function readFromFile(){
+    var file = fs.readFileSync(FILE_NAME, 'utf8');
+    return file; 
+}
+
+function saveToFile(key, value){
+    fs.writeFileSync(FILE_NAME, key+','+value+'\n');
+}
+
+function getFromFile(key){
+    var file = fs.readFileSync(FILE_NAME, 'utf8');
+    var lines = file.split('\n');
+    var matchedValue = '';
+    var found = false;
+    lines.forEach(function(line){
+        var storedKeyValuePairs = line.split(',');
+        var storedKey = storedKeyValuePairs[0];
+        var storedValue = storedKeyValuePairs[1];
+        if(storedKey==key){
+            matchedValue = storedValue;
+            found = true;
+        }
+    });
+
+    if(found){
+        console.log('Returning: '+matchedValue);
+        return matchedValue;
+    }
+}
 
 
 app.listen(8888, function() {
