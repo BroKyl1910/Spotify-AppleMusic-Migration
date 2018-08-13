@@ -5,8 +5,10 @@ var express = require("express"),
     cors = require('cors'),
     cookieParser = require('cookie-parser'),
     queryString = require('querystring'),
-    fs = require('fs')
+    fs = require('fs'),
+    bodyParser = require('body-parser'),
     FILE_NAME = 'app_data.txt';
+    // playlistsScript = require('./public/scripts/playlists.js');
 
 
 app.set("view engine", "ejs");
@@ -22,19 +24,56 @@ app.get("/print", function(req, res){
 });
 
 app.get("/playlists", function(req,res){
-    res.render("playlists");
     var accessToken = getFromFile('access_token');
+    console.log(accessToken);
     var requestOptions = {
         url: 'https://api.spotify.com/v1/me/playlists',
         headers: {
-            'Authorization': 'Bearer '+accessToken 
+            'Authorization': 'Bearer '+ accessToken 
         }
     }
     request(requestOptions, function (error, response, body) {
-      console.log('error:', error); // Print the error if one occurred
-      console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-      console.log('body:', body); // Print the HTML for the Google homepage.
+      console.log('body:', body);
+      var parsedBody = JSON.parse(body);
+      console.log(parsedBody["items"]);
+      var items = parsedBody["items"];
+      var playlistNames = [];
+      var playlistIds = [];
+      items.forEach(function(item){
+        playlistNames.push(item["name"]);
+        playlistIds.push(item["id"]);
+      });
+      console.log(playlistNames);
+      res.render("playlists", {playlistNames: playlistNames, playlistIds: playlistIds});
     });
+});
+
+app.get("/:playlistID/tracks", function(req, res){
+    var playlistId = req.params.playlistID;
+    console.log('Playlist ID: ' +playlistId);
+    var accessToken = getFromFile('access_token');
+    var userId = getFromFile('user_id');
+    var requestOptions = {
+        url: 'https://api.spotify.com/v1/users/'+userId+'/playlists/'+playlistId+'/tracks',
+        headers: {
+            'Authorization': 'Bearer '+ accessToken 
+        }
+    }
+    request(requestOptions, function (error, response, body) {
+      console.log('body:', body);
+      var parsedBody = JSON.parse(body);
+      var items = parsedBody["items"];
+      var trackNames = [];
+      var trackIds = [];
+      var trackArtists = [];
+      items.forEach(function(item){
+        trackNames.push(item["track"]["name"]);
+        trackIds.push(item["track"]["id"]);
+        trackArtists.push(item["track"]["artists"][0]["name"]);
+      });
+      res.send({trackNames: trackNames, trackArtists: trackArtists, trackIds: trackIds});
+    });
+
 });
 
 /*
@@ -110,6 +149,7 @@ app.get("/callback", function(req, res) {
                 var access_token = body.access_token,
                     refresh_token = body.refresh_token;
 
+                clearFile();
                 saveToFile('access_token', access_token);
 
                 var options = {
@@ -123,6 +163,7 @@ app.get("/callback", function(req, res) {
                 // use the access token to access the Spotify Web API
                 request.get(options, function(error, response, body) {
                     console.log(body);
+                    saveToFile('user_id', body.id);
                 });
 
                 console.log("Logged In Successfully");
@@ -156,7 +197,7 @@ function readFromFile(){
 }
 
 function saveToFile(key, value){
-    fs.writeFileSync(FILE_NAME, key+','+value+'\n');
+    fs.appendFileSync(FILE_NAME, key+','+value+'\n');
 }
 
 function getFromFile(key){
@@ -178,6 +219,10 @@ function getFromFile(key){
         console.log('Returning: '+matchedValue);
         return matchedValue;
     }
+}
+
+function clearFile(){
+    fs.writeFileSync(FILE_NAME, '');
 }
 
 

@@ -3,10 +3,53 @@
     <head>
         <title>Spotify API Practice</title>
         <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+
     </head>
     <body>
-        <h1>Playlists</h1>
-        
-        <p></p>
+    	<div class="container">
+    		<h1>Playlists</h1>
+
+	        <select id = "playlistSelect">
+	        	<% for(i = 0; i < playlistNames.length; i++) { %>
+	        	<option value= '<%= playlistIds[i] %>'><%= playlistNames[i] %></option>
+	    		<% } %>
+	        </select>
+	        <br>
+	       	<br>
+	        <select id="trackSelect" size="30" style = "visibility: hidden;">
+				
+			</select>
+
+    	</div>
+
+
+
+
+        <!-- SCRIPTS -->
+        <script src="http://code.jquery.com/jquery-3.3.1.min.js"  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+        <script type="text/javascript">
+        	$("#playlistSelect").change(function(){
+        		var playlistID = $("#playlistSelect").val();
+        		console.log(playlistID);
+        		$.ajax({
+        			type: 'GET',
+        			url: '/'+playlistID+'/tracks',
+        			success: function(data){
+        				var tracks = data.trackNames;        			
+        				var artists = data.trackArtists; 
+        				$("#trackSelect").empty();       			
+        				var ids = data.trackIds; 
+        				$("#trackSelect").attr('size', tracks.length);
+        				$("#trackSelect").css("visibility", "visible");
+        				for (i = 0; i < tracks.length; i++) {
+        				    $('#trackSelect').append($('<option>', {
+							    value: ids[i],
+							    text: tracks[i]+" - " + artists[i]
+							}));
+        				};       			
+        			}
+        		});
+        	})
+        </script>
     </body>
 </html>
