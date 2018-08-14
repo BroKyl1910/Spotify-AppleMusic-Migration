@@ -39,12 +39,14 @@ app.get("/playlists", function(req,res){
       var items = parsedBody["items"];
       var playlistNames = [];
       var playlistIds = [];
+      var playlists = [];
       items.forEach(function(item){
-        playlistNames.push(item["name"]);
-        playlistIds.push(item["id"]);
+        playlists.push({
+            playlistName: item["name"],
+            playlistId: item["id"]
+        });
       });
-      console.log(playlistNames);
-      res.render("playlists", {playlistNames: playlistNames, playlistIds: playlistIds});
+      res.render("playlists", {playlists: playlists});
     });
 });
 
@@ -66,12 +68,17 @@ app.get("/:playlistID/tracks", function(req, res){
       var trackNames = [];
       var trackIds = [];
       var trackArtists = [];
+      var tracks=[];
       items.forEach(function(item){
-        trackNames.push(item["track"]["name"]);
-        trackIds.push(item["track"]["id"]);
-        trackArtists.push(item["track"]["artists"][0]["name"]);
+        tracks.push(
+            {
+                trackName: item["track"]["name"],
+                trackId: item["track"]["id"],
+                trackArtist: item["track"]["artists"][0]["name"]
+            }
+        );
       });
-      res.send({trackNames: trackNames, trackArtists: trackArtists, trackIds: trackIds});
+      res.send({tracks: tracks});
     });
 
 });

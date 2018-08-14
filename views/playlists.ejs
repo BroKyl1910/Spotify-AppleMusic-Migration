@@ -3,23 +3,47 @@
     <head>
         <title>Spotify API Practice</title>
         <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
-
+        <style type="text/css">
+            option:nth-child(even){
+                background-color: #f7faff;
+            }
+        </style>
     </head>
     <body>
     	<div class="container">
-    		<h1>Playlists</h1>
+            <div class="row">
+                <!-- START OF SPOTIFY COLUMN -->
+                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+                    <h1>Spotify</h1>
 
-	        <select id = "playlistSelect">
-	        	<% for(i = 0; i < playlistNames.length; i++) { %>
-	        	<option value= '<%= playlistIds[i] %>'><%= playlistNames[i] %></option>
-	    		<% } %>
-	        </select>
-	        <br>
-	       	<br>
-	        <select id="trackSelect" size="30" style = "visibility: hidden; width: 500px;">
-				
-			</select>
+                    <select class="form-control" id = "playlistSelect">
+                        <% playlists.forEach(function(playlist){ %>
+                            <option value= '<%= playlist.playlistId %>'><%= playlist.playlistName %></option>
+                        <% }); %>
+                    </select>
+                    <br>
+                    <br>
+                    <select class="form-control" id="trackSelect" size="30" style = "visibility: hidden; " >
+                        <!-- populated in script -->
+                    </select>
+                </div>
+                <!-- END OF SPOTIFY COLUMN -->
 
+                <!-- START OF APPLE MUSIC COLUMN -->
+                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 ">
+                    <h1>Apple Music</h1>
+
+                    <select class="form-control" id = "playlistSelect">
+                        <% playlists.forEach(function(playlist){ %>
+                            <option value= '<%= playlist.playlistId %>'><%= playlist.playlistName %></option>
+                        <% }); %>
+                    </select>
+                    <br>
+                    <br>
+                    <select class="form-control" multiple="multiple" id="trackSelect" size="30" style = "visibility: visible;" >
+                </div>
+                <!-- END OF APPLE MUSIC COLUMN -->
+            </div>
     	</div>
 
 
@@ -28,13 +52,14 @@
         <!-- SCRIPTS -->
         <script src="http://code.jquery.com/jquery-3.3.1.min.js"  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
         <script type="text/javascript">
+        
+            $(document).ready(function(){
+                loadTracksIntoSelect();
+            });
+
         	$("#playlistSelect").change(function(){
         		loadTracksIntoSelect();
         	});
-
-        	$(document).ready(function(){
-			    loadTracksIntoSelect();
-			});
 
         	function loadTracksIntoSelect(){
         		var playlistID = $("#playlistSelect").val();
@@ -43,18 +68,17 @@
         			type: 'GET',
         			url: '/'+playlistID+'/tracks',
         			success: function(data){
-        				var tracks = data.trackNames;        			
-        				var artists = data.trackArtists; 
-        				$("#trackSelect").empty();       			
-        				var ids = data.trackIds; 
+        				$("#trackSelect").empty();       			 
         				// $("#trackSelect").attr('size', 30);
-        				$("#trackSelect").css("visibility", "visible");
-        				for (i = 0; i < tracks.length; i++) {
-        				    $('#trackSelect').append($('<option>', {
-							    value: ids[i],
-							    text: (i+1)+". "+tracks[i]+" - " + artists[i]
-							}));
-        				};       			
+        				$("#trackSelect").css("visibility", "visible");   
+                        var i = 0; 
+                        data.tracks.forEach(function(track){
+                             $('#trackSelect').append($('<option>', {
+                                value: track.trackId,
+                                text: (i+1)+". "+track.trackName+" - " + track.trackArtist
+                            }));
+                            i++;
+                        });  			
         			}
         		});
         	}
