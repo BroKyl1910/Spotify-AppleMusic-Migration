@@ -4,16 +4,29 @@
         <title>Spotify API Practice</title>
         <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
         <style type="text/css">
-            option:nth-child(even){
+            option:nth-child(even), #trackSelect a:nth-child(even){
                 background-color: #f7faff;
+            }
+            #trackSelect{
+                line-height: 2.5ex;
+                height: 50.0ex; /* 2.5ex for each visible line */
+                overflow-y: scroll;
+                overflow-x: scroll;
+            }
+            /*#trackSelect a{
+                overflow-x: scroll;
+            }*/
+            #trackSelect a input{
+                margin-top: -1px;
+                margin-right: 5px;
             }
         </style>
     </head>
     <body>
     	<div class="container">
             <div class="row">
-                <!-- START OF SPOTIFY COLUMN -->
-                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+                <!-- START OF SPOTIFY ROW -->
+                <div class="col-lg-8 col-md-8 col-sm-8 col-xs-8">
                     <h1>Spotify</h1>
 
                     <select class="form-control" id = "playlistSelect">
@@ -23,14 +36,16 @@
                     </select>
                     <br>
                     <br>
-                    <select class="form-control" id="trackSelect" size="30" style = "visibility: hidden; " >
-                        <!-- populated in script -->
-                    </select>
-                </div>
-                <!-- END OF SPOTIFY COLUMN -->
+                    <div class="list-group" id="trackSelect" style="visibility: hidden;">
 
-                <!-- START OF APPLE MUSIC COLUMN -->
-                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 ">
+                    </div>
+                </div>
+                <!-- END OF SPOTIFY ROW -->
+
+            </div>
+            <div class="row">
+                 <!-- START OF APPLE MUSIC ROW -->
+                <div class="col-lg-8 col-md-8 col-sm-8 col-xs-8">
                     <h1>Apple Music</h1>
 
                     <select class="form-control" id = "playlistSelect">
@@ -40,9 +55,9 @@
                     </select>
                     <br>
                     <br>
-                    <select class="form-control" multiple="multiple" id="trackSelect" size="30" style = "visibility: visible;" >
+                    <select multiple class="form-control" id="trackSelect" size="30" style = "visibility: visible;" ></select>
                 </div>
-                <!-- END OF APPLE MUSIC COLUMN -->
+                <!-- END OF APPLE MUSIC ROW -->
             </div>
     	</div>
 
@@ -69,14 +84,15 @@
         			url: '/'+playlistID+'/tracks',
         			success: function(data){
         				$("#trackSelect").empty();       			 
-        				// $("#trackSelect").attr('size', 30);
         				$("#trackSelect").css("visibility", "visible");   
                         var i = 0; 
+                        $('#trackSelect').append('<a href="#" class="list-group-item"><input type="checkbox" class="checkbox-inline" value="select_all" style="background-color: #dbdbdb;"/>Select All</a>');
                         data.tracks.forEach(function(track){
-                             $('#trackSelect').append($('<option>', {
-                                value: track.trackId,
-                                text: (i+1)+". "+track.trackName+" - " + track.trackArtist
-                            }));
+                            //  $('#trackSelect').append($('<option>', {
+                            //     value: track.trackId,
+                            //     text: (i+1)+". "+track.trackName+" - " + track.trackArtist
+                            // }));
+                            $('#trackSelect').append('<a href="#" class="list-group-item"><input type="checkbox" class="checkbox-inline" value='+track.trackId+'/>'+track.trackName+' - '+track.trackArtist+'</a>');
                             i++;
                         });  			
         			}
