@@ -7,7 +7,7 @@ var express = require("express"),
     queryString = require('querystring'),
     fs = require('fs'),
     bodyParser = require('body-parser'),
-    FILE_NAME = 'app_data.txt';
+    SPOTIFY_FILE_NAME = 'spotify_app_data.txt';
     // playlistsScript = require('./public/scripts/playlists.js');
 
 
@@ -16,15 +16,10 @@ app.use(express.static("public"));
 
 app.get("/", function(req, res) {
     res.render("index");
-    // logInToSpotify();
 });
 
-app.get("/print", function(req, res){
-    console.log(readFromFile());
-});
-
-app.get("/playlists", function(req,res){
-    var accessToken = getFromFile('access_token');
+app.get("/spotify/playlists", function(req,res){
+    var accessToken = getFromFile(SPOTIFY_FILE_NAME,'access_token');
     console.log(accessToken);
     var requestOptions = {
         url: 'https://api.spotify.com/v1/me/playlists',
@@ -50,11 +45,11 @@ app.get("/playlists", function(req,res){
     });
 });
 
-app.get("/:playlistID/tracks", function(req, res){
+app.get("/spotify/:playlistID/tracks", function(req, res){
     var playlistId = req.params.playlistID;
     console.log('Playlist ID: ' +playlistId);
-    var accessToken = getFromFile('access_token');
-    var userId = getFromFile('user_id');
+    var accessToken = getFromFile(SPOTIFY_FILE_NAME, 'access_token');
+    var userId = getFromFile(SPOTIFY_FILE_NAME, 'user_id');
     var requestOptions = {
         url: 'https://api.spotify.com/v1/users/'+userId+'/playlists/'+playlistId+'/tracks',
         headers: {
@@ -83,14 +78,52 @@ app.get("/:playlistID/tracks", function(req, res){
 
 });
 
+
+function readFromFile(name){
+    var file = fs.readFileSync(name, 'utf8');
+    return file; 
+}
+
+function saveToFile(name, key, value){
+    fs.appendFileSync(name, key+','+value+'\n');
+}
+
+function getFromFile(name, key){
+    var file = fs.readFileSync(name, 'utf8');
+    var lines = file.split('\n');
+    var matchedValue = '';
+    var found = false;
+    lines.forEach(function(line){
+        var storedKeyValuePairs = line.split(',');
+        var storedKey = storedKeyValuePairs[0];
+        var storedValue = storedKeyValuePairs[1];
+        if(storedKey==key){
+            matchedValue = storedValue;
+            found = true;
+        }
+    });
+
+    if(found){
+        console.log('Returning: '+matchedValue);
+        return matchedValue;
+    }
+}
+function clearFile(name){
+    fs.writeFileSync(name, '');
+}
+
+
+
+
+
 /*
 ============================================================================================
-USER LOGIN
+SPOTIFY USER LOGIN
 ============================================================================================
 */
-var client_id = 'f6c0cae9a5244364853aa409966d4672'; // Your client id
-var client_secret = '18ed5d3f21684eacbe36b94ca5a1c1cd'; // Your secret
-var redirect_uri = 'http://localhost:8888/callback'; // Your redirect uri
+var spotify_client_id = 'f6c0cae9a5244364853aa409966d4672'; // Your client id
+var spotify_client_secret = '18ed5d3f21684eacbe36b94ca5a1c1cd'; // Your secret
+var spotify_redirect_uri = 'http://localhost:8888/spotify/callback'; // Your redirect uri
 
 
 var generateRandomString = function(length) {
@@ -107,7 +140,7 @@ app.use(cors())
     .use(cookieParser());
 
 
-app.get("/login_spotify", function(req, res) {
+app.get("/spotify/login", function(req, res) {
     console.log("Attempting to log in");
 
     var state = generateRandomString(16);
@@ -117,15 +150,15 @@ app.get("/login_spotify", function(req, res) {
     res.redirect('https://accounts.spotify.com/authorize?' +
         queryString.stringify({
             response_type: 'code',
-            client_id: client_id,
+            client_id: spotify_client_id,
             scope: scope,
-            redirect_uri: redirect_uri,
+            redirect_uri: spotify_redirect_uri,
             state: state,
             show_dialog: true
         }));
 });
 
-app.get("/callback", function(req, res) {
+app.get("/spotify/callback", function(req, res) {
     var code = req.query.code || null;
     var state = req.query.state || null;
     var storedState = req.cookies ? req.cookies[stateKey] : null;
@@ -141,11 +174,11 @@ app.get("/callback", function(req, res) {
             url: 'https://accounts.spotify.com/api/token',
             form: {
                 code: code,
-                redirect_uri: redirect_uri,
+                redirect_uri: spotify_redirect_uri,
                 grant_type: 'authorization_code'
             },
             headers: {
-                'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
+                'Authorization': 'Basic ' + (new Buffer(spotify_client_id + ':' + spotify_client_secret).toString('base64'))
             },
             json: true
         };
@@ -156,8 +189,8 @@ app.get("/callback", function(req, res) {
                 var access_token = body.access_token,
                     refresh_token = body.refresh_token;
 
-                clearFile();
-                saveToFile('access_token', access_token);
+                clearFile(SPOTIFY_FILE_NAME);
+                saveToFile(SPOTIFY_FILE_NAME, 'access_token', access_token);
 
                 var options = {
                     url: 'https://api.spotify.com/v1/me',
@@ -170,7 +203,7 @@ app.get("/callback", function(req, res) {
                 // use the access token to access the Spotify Web API
                 request.get(options, function(error, response, body) {
                     console.log(body);
-                    saveToFile('user_id', body.id);
+                    saveToFile(SPOTIFY_FILE_NAME, 'user_id', body.id);
                 });
 
                 console.log("Logged In Successfully");
@@ -194,43 +227,9 @@ app.get("/callback", function(req, res) {
 
 /*
 ============================================================================================
-END OF USER LOGIN
+SPOTIFY END OF USER LOGIN
 ============================================================================================
 */
-
-function readFromFile(){
-    var file = fs.readFileSync(FILE_NAME, 'utf8');
-    return file; 
-}
-
-function saveToFile(key, value){
-    fs.appendFileSync(FILE_NAME, key+','+value+'\n');
-}
-
-function getFromFile(key){
-    var file = fs.readFileSync(FILE_NAME, 'utf8');
-    var lines = file.split('\n');
-    var matchedValue = '';
-    var found = false;
-    lines.forEach(function(line){
-        var storedKeyValuePairs = line.split(',');
-        var storedKey = storedKeyValuePairs[0];
-        var storedValue = storedKeyValuePairs[1];
-        if(storedKey==key){
-            matchedValue = storedValue;
-            found = true;
-        }
-    });
-
-    if(found){
-        console.log('Returning: '+matchedValue);
-        return matchedValue;
-    }
-}
-
-function clearFile(){
-    fs.writeFileSync(FILE_NAME, '');
-}
 
 
 app.listen(8888, function() {

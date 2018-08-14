@@ -81,7 +81,7 @@
         		console.log(playlistID);
         		$.ajax({
         			type: 'GET',
-        			url: '/'+playlistID+'/tracks',
+        			url: '/spotify/'+playlistID+'/tracks',
         			success: function(data){
         				$("#trackSelect").empty();       			 
         				$("#trackSelect").css("visibility", "visible");   
